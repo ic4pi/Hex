@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import path from 'path'
+import { put } from '@vercel/blob'
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,17 +24,14 @@ export async function POST(req: NextRequest) {
     }
 
     const sanitizedKey = key.replace(/[^a-z0-9-_]/gi, '-').slice(0, 80)
-    const filename = `${sanitizedKey}.${ext}`
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
+    const filename = `hexpose/${sanitizedKey}.${ext}`
 
-    await mkdir(uploadsDir, { recursive: true })
+    const blob = await put(filename, file, {
+      access: 'public',
+      addRandomSuffix: false,
+    })
 
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    await writeFile(path.join(uploadsDir, filename), buffer)
-
-    const url = `/uploads/${filename}`
-    return NextResponse.json({ ok: true, url })
+    return NextResponse.json({ ok: true, url: blob.url })
   } catch (err) {
     console.error('Upload error:', err)
     return NextResponse.json({ ok: false, error: String(err) }, { status: 500 })
