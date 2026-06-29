@@ -1,13 +1,8 @@
 import type { Metadata } from 'next'
-import { Geist } from 'next/font/google'
+import { GeistSans } from 'geist/font/sans'
 import './globals.css'
 import { getStoreData } from '@/lib/products'
 import CursorGlow from '@/components/CursorGlow'
-
-const geist = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
 
 export async function generateMetadata(): Promise<Metadata> {
   let assets = { socialShare: '', favicon: '' }
@@ -38,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={geist.variable}>
+    <html lang="en" className={GeistSans.variable}>
       <body className="min-h-screen bg-black text-[#f0e6ff] antialiased overflow-x-hidden">
         <CursorGlow />
         {children}
