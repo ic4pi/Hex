@@ -1,10 +1,4 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  outputFileTracingIncludes: {
-    '/': ['./data/**/*'],
-    '/admin': ['./data/**/*'],
-    '/api/**': ['./data/**/*'],
-  },
-}
+const nextConfig = {}
 
 module.exports = nextConfig
