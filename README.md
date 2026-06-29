@@ -57,7 +57,7 @@ npm start
 
 ## Stripe Payment Links
 
-Each product's "Buy Now" button opens the Stripe Payment Link in a new tab. To redirect customers back to your success page after purchase, set the **After-payment redirect URL** in your Stripe Payment Link settings to:
+Each product's "Buy Now" button opens the Stripe Payment Link To redirect customers back to your success page after purchase, set the **After-payment redirect URL** in your Stripe Payment Link settings to:
 
 ```
 https://your-domain.com/success
