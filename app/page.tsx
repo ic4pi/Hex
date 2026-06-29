@@ -163,13 +163,15 @@ export default async function Home() {
         }}
       >
         <span>
-          Made for women who are done waiting for things to change on their own
+          The truth doesn&rsquo;t care if you&rsquo;re ready for it
         </span>
         <span className="mx-4 opacity-40">✦</span>
-        <span>All products $33</span>
-        <span className="mx-4 opacity-40">✦</span>
         <span style={{ color: '#9d00ff', textShadow: '0 0 6px #9d00ff' }}>
-          Ritual &amp; entertainment purposes
+          What&rsquo;s hidden always finds the light
+        </span>
+        <span className="mx-4 opacity-40">✦</span>
+        <span>
+          Expose it. Name it. Move.
         </span>
       </div>
 
