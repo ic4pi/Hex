@@ -264,6 +264,8 @@ test_plan:
   test_priority: "high_first"
 
 agent_communication:
+  - agent: "testing"
+    message: "All 43 backend API tests passed. Applied a tiny fix: added !! boolean cast in isAdmin() so /api/admin/verify returns {authed:false} instead of null."
   - agent: "main"
     message: |
       Module 1 storefront + admin built. Please test all backend API endpoints listed under test_plan.current_focus. Key details:
