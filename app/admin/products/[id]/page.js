@@ -11,6 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 import { ArrowLeft, Save, Trash2, Eye, Plus, GripVertical, X } from 'lucide-react'
+import { TagPicker } from '@/components/tag-picker'
+import {
+  MOON_PHASES, PLANETS, ZODIAC, ELEMENTS, CHAKRAS, CANDLE_COLORS,
+  DIFFICULTY, ENERGY_LEVELS, CRYSTAL_LIBRARY, HERB_LIBRARY,
+} from '@/lib/spell-options'
 
 const BLANK = {
   name: '', slug: '', category: 'spell-jars', description: '', rich_description: '',
@@ -18,7 +23,7 @@ const BLANK = {
   hero_image: '', gallery_images: [],
   featured: false, bestseller: false, new_arrival: false, limited_edition: false, active: true,
   seo_title: '', seo_description: '',
-  spell: { magical_intention: '', moon_phase: '', planet: '', zodiac: '', element: '', chakra: '', crystal: '', herbs: '', candle_color: '', ritual_duration: '', difficulty: '', energy_level: '', care_instructions: '', ingredients: '', safety_disclaimer: '' },
+  spell: { magical_intention: '', moon_phase: '', planet: '', zodiac: '', element: '', chakra: '', crystal: [], herbs: [], candle_color: '', ritual_duration: '', difficulty: '', energy_level: '', care_instructions: '', ingredients: '', safety_disclaimer: '' },
 }
 
 export default function ProductEditor() {
@@ -147,17 +152,30 @@ export default function ProductEditor() {
           </div>
         </TabsContent>
 
-        <TabsContent value="spell" className="mt-6">
+        <TabsContent value="spell" className="mt-6 space-y-5">
           <div className="grid md:grid-cols-2 gap-4">
-            {[
-              ['magical_intention', 'Magical Intention'], ['moon_phase', 'Moon Phase'], ['planet', 'Planet'], ['zodiac', 'Zodiac'],
-              ['element', 'Element'], ['chakra', 'Chakra'], ['crystal', 'Crystal'], ['herbs', 'Herbs'],
-              ['candle_color', 'Candle Color'], ['ritual_duration', 'Ritual Duration'], ['difficulty', 'Difficulty'], ['energy_level', 'Energy Level'],
-            ].map(([k, label]) => (
-              <Field key={k} label={label}><Input value={p.spell?.[k] || ''} onChange={e => setSpell(k, e.target.value)} className="bg-white/5 border-white/10"/></Field>
-            ))}
+            <Field label="Magical Intention">
+              <Input value={p.spell?.magical_intention || ''} onChange={e => setSpell('magical_intention', e.target.value)} placeholder="e.g., Protection & Warding" className="bg-white/5 border-white/10"/>
+            </Field>
+            <Field label="Ritual Duration">
+              <Input value={p.spell?.ritual_duration || ''} onChange={e => setSpell('ritual_duration', e.target.value)} placeholder='e.g., "7 days" or "One lunar cycle"' className="bg-white/5 border-white/10"/>
+            </Field>
+            <PickerField label="Moon Phase" options={MOON_PHASES} value={p.spell?.moon_phase} on={v => setSpell('moon_phase', v)}/>
+            <PickerField label="Planet" options={PLANETS} value={p.spell?.planet} on={v => setSpell('planet', v)}/>
+            <PickerField label="Zodiac" options={ZODIAC} value={p.spell?.zodiac} on={v => setSpell('zodiac', v)}/>
+            <PickerField label="Element" options={ELEMENTS} value={p.spell?.element} on={v => setSpell('element', v)}/>
+            <PickerField label="Chakra" options={CHAKRAS} value={p.spell?.chakra} on={v => setSpell('chakra', v)}/>
+            <PickerField label="Candle Color" options={CANDLE_COLORS} value={p.spell?.candle_color} on={v => setSpell('candle_color', v)}/>
+            <PickerField label="Difficulty" options={DIFFICULTY} value={p.spell?.difficulty} on={v => setSpell('difficulty', v)}/>
+            <PickerField label="Energy Level" options={ENERGY_LEVELS} value={p.spell?.energy_level} on={v => setSpell('energy_level', v)}/>
           </div>
-          <div className="mt-4 space-y-4">
+          <Field label="Crystals (multi-select)">
+            <TagPicker value={p.spell?.crystal} library={CRYSTAL_LIBRARY} placeholder="Search or type to add..." onChange={arr => setSpell('crystal', arr)}/>
+          </Field>
+          <Field label="Herbs (multi-select)">
+            <TagPicker value={p.spell?.herbs} library={HERB_LIBRARY} placeholder="Search or type to add..." onChange={arr => setSpell('herbs', arr)}/>
+          </Field>
+          <div className="space-y-4">
             <Field label="Care Instructions"><Textarea rows={2} value={p.spell?.care_instructions || ''} onChange={e => setSpell('care_instructions', e.target.value)} className="bg-white/5 border-white/10"/></Field>
             <Field label="Ingredients"><Textarea rows={2} value={p.spell?.ingredients || ''} onChange={e => setSpell('ingredients', e.target.value)} className="bg-white/5 border-white/10"/></Field>
             <Field label="Safety Disclaimer"><Textarea rows={2} value={p.spell?.safety_disclaimer || ''} onChange={e => setSpell('safety_disclaimer', e.target.value)} className="bg-white/5 border-white/10"/></Field>
@@ -183,6 +201,21 @@ export default function ProductEditor() {
 
 function Field({ label, children }) {
   return <div><Label className="text-white/70 mb-1 block">{label}</Label>{children}</div>
+}
+function PickerField({ label, options, value, on }) {
+  return (
+    <Field label={label}>
+      <Select value={value || ''} onValueChange={(v) => on(v === '__clear__' ? '' : v)}>
+        <SelectTrigger className="bg-white/5 border-white/10">
+          <SelectValue placeholder="— Select —" />
+        </SelectTrigger>
+        <SelectContent className="bg-black border-white/10 text-white max-h-72">
+          {value && <SelectItem value="__clear__" className="text-white/60">— Clear —</SelectItem>}
+          {options.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    </Field>
+  )
 }
 function Toggle({ label, val, on }) {
   return (

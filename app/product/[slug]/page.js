@@ -164,13 +164,22 @@ export default function ProductPage() {
 }
 
 function MetaItem({ icon: Icon, label, value }) {
-  if (!value) return null
+  const isArr = Array.isArray(value)
+  if (!value || (isArr && value.length === 0)) return null
   return (
     <div className="flex items-start gap-2">
       <Icon className="h-4 w-4 text-[#ff1177] mt-0.5 flex-shrink-0"/>
-      <div>
+      <div className="min-w-0">
         <p className="text-[10px] uppercase tracking-widest text-white/40">{label}</p>
-        <p className="text-sm text-white/90">{value}</p>
+        {isArr ? (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {value.map((v, i) => (
+              <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/90">{v}</span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-white/90 break-words">{value}</p>
+        )}
       </div>
     </div>
   )
