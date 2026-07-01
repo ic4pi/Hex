@@ -5,8 +5,15 @@ import { seedCategories, seedProducts, seedHero, seedBranding } from '@/lib/seed
 
 let client, db
 async function connectToMongo() {
+  if (!process.env.MONGO_URL) {
+    const err = new Error('MONGO_URL is not configured. Set it in your Vercel project environment variables.')
+    err.code = 'NO_MONGO_URL'
+    throw err
+  }
   if (!client) {
-    client = new MongoClient(process.env.MONGO_URL)
+    client = new MongoClient(process.env.MONGO_URL, {
+      serverSelectionTimeoutMS: 8000,
+    })
     await client.connect()
     db = client.db(process.env.DB_NAME || 'hexpose')
   }
@@ -245,6 +252,11 @@ async function handleRoute(request, { params }) {
     return cors(NextResponse.json({ error: `Route ${route} not found` }, { status: 404 }))
   } catch (error) {
     console.error('API Error:', error)
+    if (error?.code === 'NO_MONGO_URL' || /MongoServerSelectionError|ECONNREFUSED|EAI_AGAIN|failed to connect|querySrv/i.test(String(error?.message || ''))) {
+      // Return safe empty responses so the frontend renders fallback content instead of crashing.
+      const safe = (route === '/products' || route === '/categories') ? [] : {}
+      return cors(NextResponse.json(safe, { status: 200, headers: { 'x-hexpose-db': 'unavailable' } }))
+    }
     return cors(NextResponse.json({ error: 'Internal server error', detail: String(error?.message || error) }, { status: 500 }))
   }
 }
