@@ -79,46 +79,46 @@ async function handleRoute(request, { params }) {
   const route = `/${path.join('/')}`
   const method = request.method
 
+  // Routes that MUST work without a DB connection (health/diagnostic)
+  if (route === '/root' && method === 'GET') return cors(NextResponse.json({ message: 'Hexpose API', ok: true }))
+  if (route === '/health' && method === 'GET') {
+    const hasUrl = !!process.env.MONGO_URL
+    const scheme = hasUrl ? (process.env.MONGO_URL.startsWith('mongodb+srv://') ? 'srv' : 'standard') : 'none'
+    if (!hasUrl) {
+      return cors(NextResponse.json({
+        ok: false, mongo_url_configured: false, mongo_url_scheme: 'none',
+        db_reachable: false, hint: 'MONGO_URL env var is not set in Vercel.',
+        admin_password_set: !!process.env.ADMIN_PASSWORD,
+      }))
+    }
+    try {
+      const _db = await connectToMongo()
+      await _db.command({ ping: 1 })
+      const productCount = await _db.collection('products').countDocuments({})
+      return cors(NextResponse.json({
+        ok: true, mongo_url_configured: true, mongo_url_scheme: scheme,
+        db_name: process.env.DB_NAME || 'hexpose', db_reachable: true,
+        product_count: productCount, admin_password_set: !!process.env.ADMIN_PASSWORD,
+      }))
+    } catch (e) {
+      return cors(NextResponse.json({
+        ok: false, mongo_url_configured: true, mongo_url_scheme: scheme,
+        db_name: process.env.DB_NAME || 'hexpose', db_reachable: false,
+        error_name: e?.name || 'Error',
+        error_message: String(e?.message || e).slice(0, 500),
+        admin_password_set: !!process.env.ADMIN_PASSWORD,
+        hint: /Authentication failed|bad auth/i.test(String(e?.message || '')) ? 'Bad username or password in MONGO_URL. Check the DB user in Atlas Database Access.' :
+              /ETIMEDOUT|ENOTFOUND|Server selection|querySrv|EAI_AGAIN/i.test(String(e?.message || '')) ? 'Cannot reach cluster. Atlas Network Access must allow 0.0.0.0/0. Or the cluster hostname in your connection string is wrong.' :
+              /not authorized/i.test(String(e?.message || '')) ? 'DB user lacks permissions. Grant Atlas admin or readWriteAnyDatabase.' :
+              /IP.+whitelist|IP.+not.+allowed/i.test(String(e?.message || '')) ? 'Your Atlas Network Access does not include Vercel IPs. Add 0.0.0.0/0.' :
+              'Unknown DB error. Copy error_message and google it, or paste it here.',
+      }))
+    }
+  }
+
   try {
     const db = await connectToMongo()
     await ensureSeeded(db)
-
-    if (route === '/root' && method === 'GET') return cors(NextResponse.json({ message: 'Hexpose API', ok: true }))
-
-    // Diagnostic endpoint - reports DB health, safe to expose (no secrets)
-    if (route === '/health' && method === 'GET') {
-      const hasUrl = !!process.env.MONGO_URL
-      const scheme = hasUrl ? (process.env.MONGO_URL.startsWith('mongodb+srv://') ? 'srv' : 'standard') : 'none'
-      try {
-        const _db = await connectToMongo()
-        await _db.command({ ping: 1 })
-        const productCount = await _db.collection('products').countDocuments({})
-        return cors(NextResponse.json({
-          ok: true,
-          mongo_url_configured: hasUrl,
-          mongo_url_scheme: scheme,
-          db_name: process.env.DB_NAME || 'hexpose',
-          db_reachable: true,
-          product_count: productCount,
-          admin_password_set: !!process.env.ADMIN_PASSWORD,
-        }))
-      } catch (e) {
-        return cors(NextResponse.json({
-          ok: false,
-          mongo_url_configured: hasUrl,
-          mongo_url_scheme: scheme,
-          db_name: process.env.DB_NAME || 'hexpose',
-          db_reachable: false,
-          error_name: e?.name || 'Error',
-          error_message: String(e?.message || e).slice(0, 400),
-          admin_password_set: !!process.env.ADMIN_PASSWORD,
-          hint: /Authentication failed|bad auth/i.test(String(e?.message || '')) ? 'Bad username or password in MONGO_URL' :
-                /ETIMEDOUT|ENOTFOUND|Server selection|querySrv/i.test(String(e?.message || '')) ? 'Cannot reach cluster. Check Atlas Network Access allows 0.0.0.0/0 and connection string host is correct.' :
-                /not authorized/i.test(String(e?.message || '')) ? 'DB user lacks permissions. Grant Atlas admin or readWrite on your database.' :
-                'Unknown DB error. See error_message.',
-        }))
-      }
-    }
 
     // ============ ADMIN AUTH ============
     if (route === '/admin/login' && method === 'POST') {
