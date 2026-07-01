@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { NextResponse } from 'next/server'
 import { seedCategories, seedProducts, seedHero, seedBranding } from '@/lib/seed-data'
 
-let client, db
+let client, db, lastConnectError = null
 async function connectToMongo() {
   if (!process.env.MONGO_URL) {
     const err = new Error('MONGO_URL is not configured. Set it in your Vercel project environment variables.')
@@ -11,13 +11,37 @@ async function connectToMongo() {
     throw err
   }
   if (!client) {
-    client = new MongoClient(process.env.MONGO_URL, {
-      serverSelectionTimeoutMS: 8000,
-    })
-    await client.connect()
-    db = client.db(process.env.DB_NAME || 'hexpose')
+    try {
+      client = new MongoClient(process.env.MONGO_URL, {
+        serverSelectionTimeoutMS: 8000,
+        connectTimeoutMS: 8000,
+      })
+      await client.connect()
+      db = client.db(process.env.DB_NAME || 'hexpose')
+      // Verify actual reachability (not just successful URL parse)
+      await db.command({ ping: 1 })
+      lastConnectError = null
+    } catch (e) {
+      lastConnectError = { name: e?.name, message: String(e?.message || e), code: e?.code }
+      // Reset so the next request retries a fresh connection instead of caching a broken client
+      try { await client?.close?.() } catch {}
+      client = null
+      db = null
+      throw e
+    }
   }
   return db
+}
+
+function isDbUnavailable(error) {
+  if (!error) return false
+  if (error.code === 'NO_MONGO_URL') return true
+  const name = error.name || ''
+  const msg = String(error.message || '')
+  return (
+    /Mongo(Network|ServerSelection|Server|Parse|Client|Timeout)?Error/i.test(name) ||
+    /ECONNREFUSED|EAI_AGAIN|ETIMEDOUT|ENOTFOUND|failed to connect|querySrv|Authentication failed|Server selection|bad auth|not authorized/i.test(msg)
+  )
 }
 
 function cors(response) {
@@ -60,6 +84,41 @@ async function handleRoute(request, { params }) {
     await ensureSeeded(db)
 
     if (route === '/root' && method === 'GET') return cors(NextResponse.json({ message: 'Hexpose API', ok: true }))
+
+    // Diagnostic endpoint - reports DB health, safe to expose (no secrets)
+    if (route === '/health' && method === 'GET') {
+      const hasUrl = !!process.env.MONGO_URL
+      const scheme = hasUrl ? (process.env.MONGO_URL.startsWith('mongodb+srv://') ? 'srv' : 'standard') : 'none'
+      try {
+        const _db = await connectToMongo()
+        await _db.command({ ping: 1 })
+        const productCount = await _db.collection('products').countDocuments({})
+        return cors(NextResponse.json({
+          ok: true,
+          mongo_url_configured: hasUrl,
+          mongo_url_scheme: scheme,
+          db_name: process.env.DB_NAME || 'hexpose',
+          db_reachable: true,
+          product_count: productCount,
+          admin_password_set: !!process.env.ADMIN_PASSWORD,
+        }))
+      } catch (e) {
+        return cors(NextResponse.json({
+          ok: false,
+          mongo_url_configured: hasUrl,
+          mongo_url_scheme: scheme,
+          db_name: process.env.DB_NAME || 'hexpose',
+          db_reachable: false,
+          error_name: e?.name || 'Error',
+          error_message: String(e?.message || e).slice(0, 400),
+          admin_password_set: !!process.env.ADMIN_PASSWORD,
+          hint: /Authentication failed|bad auth/i.test(String(e?.message || '')) ? 'Bad username or password in MONGO_URL' :
+                /ETIMEDOUT|ENOTFOUND|Server selection|querySrv/i.test(String(e?.message || '')) ? 'Cannot reach cluster. Check Atlas Network Access allows 0.0.0.0/0 and connection string host is correct.' :
+                /not authorized/i.test(String(e?.message || '')) ? 'DB user lacks permissions. Grant Atlas admin or readWrite on your database.' :
+                'Unknown DB error. See error_message.',
+        }))
+      }
+    }
 
     // ============ ADMIN AUTH ============
     if (route === '/admin/login' && method === 'POST') {
@@ -251,11 +310,10 @@ async function handleRoute(request, { params }) {
 
     return cors(NextResponse.json({ error: `Route ${route} not found` }, { status: 404 }))
   } catch (error) {
-    console.error('API Error:', error)
-    if (error?.code === 'NO_MONGO_URL' || /MongoServerSelectionError|ECONNREFUSED|EAI_AGAIN|failed to connect|querySrv/i.test(String(error?.message || ''))) {
-      // Return safe empty responses so the frontend renders fallback content instead of crashing.
+    console.error('API Error:', error?.name, error?.message)
+    if (isDbUnavailable(error)) {
       const safe = (route === '/products' || route === '/categories') ? [] : {}
-      return cors(NextResponse.json(safe, { status: 200, headers: { 'x-hexpose-db': 'unavailable' } }))
+      return cors(NextResponse.json(safe, { status: 200, headers: { 'x-hexpose-db': 'unavailable', 'x-hexpose-db-error': String(error?.name || 'unknown') } }))
     }
     return cors(NextResponse.json({ error: 'Internal server error', detail: String(error?.message || error) }, { status: 500 }))
   }
