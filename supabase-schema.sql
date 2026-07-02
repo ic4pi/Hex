@@ -93,6 +93,19 @@ CREATE TABLE IF NOT EXISTS contact_messages (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ============ ORDERS ============
+CREATE TABLE IF NOT EXISTS orders (
+  id              TEXT PRIMARY KEY,
+  stripe_session  TEXT UNIQUE,
+  customer_email  TEXT DEFAULT '',
+  customer_name   TEXT DEFAULT '',
+  items           JSONB DEFAULT '[]',
+  subtotal        NUMERIC(10,2) DEFAULT 0,
+  total           NUMERIC(10,2) DEFAULT 0,
+  status          TEXT DEFAULT 'paid',
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ============ ROW LEVEL SECURITY ============
 -- We use the service_role key server-side, which bypasses RLS.
 -- Disable RLS on all tables so the API works correctly.
@@ -103,3 +116,4 @@ ALTER TABLE branding_settings DISABLE ROW LEVEL SECURITY;
 ALTER TABLE settings          DISABLE ROW LEVEL SECURITY;
 ALTER TABLE newsletter        DISABLE ROW LEVEL SECURITY;
 ALTER TABLE contact_messages  DISABLE ROW LEVEL SECURITY;
+ALTER TABLE orders            DISABLE ROW LEVEL SECURITY;

@@ -5,13 +5,36 @@ import SiteFooter from '@/components/site-footer'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { useCart } from '@/components/cart-provider'
-import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react'
+import { Minus, Plus, Trash2, ShoppingBag, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 
 export default function CartPage() {
   const [branding, setBranding] = useState(null)
+  const [checkingOut, setCheckingOut] = useState(false)
   const { items, remove, setQty, subtotal } = useCart()
-  useEffect(() => { fetch('/api/branding').then(r => r.json()).then(setBranding) }, [])
+
+  const handleCheckout = async () => {
+    setCheckingOut(true)
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: items.map(i => ({ id: i.id, qty: i.qty })) }),
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        toast.error(data.error || 'Checkout failed. Please try again.')
+        setCheckingOut(false)
+      }
+    } catch {
+      toast.error('Checkout failed. Please try again.')
+      setCheckingOut(false)
+    }
+  }
+  useEffect(() => { fetch('/api/branding').then(r => r.json()).then(d => { if (d && !d.error) setBranding(d) }) }, [])
   return (
     <div className="min-h-screen bg-black text-white">
       <SiteNavbar branding={branding}/>
@@ -57,8 +80,14 @@ export default function CartPage() {
               </div>
               <Separator className="my-4 bg-white/10"/>
               <div className="flex justify-between font-medium text-lg"><span>Total</span><span>${subtotal.toFixed(2)}</span></div>
-              <Button disabled={items.length === 0} className="mt-5 w-full bg-gradient-to-r from-[#ff1177] to-[#3ea6ff] hover:opacity-90 glow-pink text-white h-11" onClick={() => alert('Stripe checkout coming in Module 2')}>Checkout via Stripe</Button>
-              <p className="text-[10px] text-white/40 mt-3 text-center">Secure payments — Stripe integration placeholder.</p>
+              <Button
+                disabled={items.length === 0 || checkingOut}
+                className="mt-5 w-full bg-gradient-to-r from-[#ff1177] to-[#3ea6ff] hover:opacity-90 glow-pink text-white h-11"
+                onClick={handleCheckout}
+              >
+                {checkingOut ? <><Loader2 className="h-4 w-4 mr-2 animate-spin"/>Redirecting to Stripe...</> : 'Checkout via Stripe'}
+              </Button>
+              <p className="text-[10px] text-white/40 mt-3 text-center">Secure checkout powered by Stripe.</p>
             </div>
           </div>
         </div>
