@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.env
+.env.local
+*.log
+.DS_Store
+/tests/
+test_result.md
+node_modules/@next/swc-linux-arm64-gnu/next-swc.linux-arm64-gnu.node
+node_modules/@next/swc-linux-arm64-musl/next-swc.linux-arm64-musl.node

@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 331 100% 54%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 10%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 210 100% 56%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5% 15%;
+    --input: 240 5% 15%;
+    --ring: 331 100% 54%;
+    --radius: 0.5rem;
+    --chart-1: 331 100% 54%;
+    --chart-2: 210 100% 56%;
+    --chart-3: 280 80% 70%;
+    --chart-4: 32 100% 60%;
+    --chart-5: 160 80% 60%;
+  }
+  html, body {
+    background: #000;
+    color: #fafafa;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  * { border-color: hsl(var(--border)); }
+}
+
+@layer utilities {
+  .font-display { font-family: 'Cinzel', serif; letter-spacing: 0.02em; }
+  .neon-pink { color: #ff1177; text-shadow: 0 0 8px rgba(255,17,119,0.7), 0 0 24px rgba(255,17,119,0.35); }
+  .neon-blue { color: #3ea6ff; text-shadow: 0 0 8px rgba(62,166,255,0.7), 0 0 24px rgba(62,166,255,0.35); }
+  .neon-lav { color: #c9a8ff; text-shadow: 0 0 8px rgba(201,168,255,0.7), 0 0 24px rgba(201,168,255,0.35); }
+  .neon-gold { color: #ffb347; text-shadow: 0 0 8px rgba(255,179,71,0.7), 0 0 24px rgba(255,179,71,0.35); }
+  .glow-pink { box-shadow: 0 0 20px rgba(255,17,119,0.4), 0 0 40px rgba(255,17,119,0.2); }
+  .glow-blue { box-shadow: 0 0 20px rgba(62,166,255,0.4), 0 0 40px rgba(62,166,255,0.2); }
+  .glass { background: linear-gradient(180deg, rgba(20,20,25,0.55), rgba(10,10,15,0.7)); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.08); }
+  .glass-pink { background: linear-gradient(180deg, rgba(255,17,119,0.08), rgba(10,10,15,0.7)); backdrop-filter: blur(14px); border: 1px solid rgba(255,17,119,0.25); }
+  .grad-cyber { background: radial-gradient(1200px 500px at 10% 0%, rgba(255,17,119,0.18), transparent 60%), radial-gradient(1000px 500px at 90% 20%, rgba(62,166,255,0.16), transparent 60%), radial-gradient(800px 400px at 50% 100%, rgba(201,168,255,0.14), transparent 60%); }
+  .hex-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,17,119,0.5), rgba(62,166,255,0.5), transparent); }
+  .grain::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.06; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); mix-blend-mode: overlay; }
+  .placeholder-jar-protect { background: radial-gradient(circle at 50% 40%, rgba(62,166,255,0.6), rgba(20,20,45,0.9) 55%, #000 90%); }
+  .placeholder-jar-prosper { background: radial-gradient(circle at 50% 40%, rgba(255,179,71,0.6), rgba(45,25,10,0.9) 55%, #000 90%); }
+  .placeholder-jar-love { background: radial-gradient(circle at 50% 40%, rgba(255,17,119,0.7), rgba(45,10,30,0.9) 55%, #000 90%); }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; }
+}
+
+@keyframes float-slow { 0%,100% { transform: translateY(0px);} 50% { transform: translateY(-14px);} }
+.animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
+
+@keyframes pulse-glow { 0%,100% { filter: drop-shadow(0 0 8px rgba(255,17,119,0.6)); } 50% { filter: drop-shadow(0 0 20px rgba(255,17,119,0.9)); } }
+.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }

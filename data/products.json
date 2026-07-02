@@ -1,0 +1,241 @@
+{
+  "products": [
+    {
+      "id": "vanish-hex-jar",
+      "name": "VANISH HEX JAR",
+      "category": "spell",
+      "subcategory": "Banishing / Protection",
+      "description": "Some people need a door closed, not a conversation. The Vanish Hex Jar is for the ones who won't take the hint — cord-cutting, energy-clearing, and gone-for-good in one sealed jar. Shake, set on the windowsill, and let them become someone else's problem.",
+      "ingredients": ["Black salt", "Dried bay leaf (write the person's initial on it, then burn the edges before adding)", "Black thread, cut into pieces (symbolizing severed connection)", "Rue", "Clove (banishing, protection)", "Small piece of obsidian or black tourmaline", "Pinch of dried nettle"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "no-contact-sachet",
+      "name": "NO CONTACT SACHET",
+      "category": "spell",
+      "subcategory": "Banishing / Protection",
+      "description": "Carry it, hang it by the door, or tuck it in a drawer they'll never open. The No Contact Sachet keeps your space — and your peace — exactly that: yours.",
+      "ingredients": ["Mugwort", "Rue", "Black tourmaline chip", "Dried thistle (protective, \"do not approach\")", "Asafoetida (traditionally used in banishing work — small amount, sealed sachet)", "Black ribbon to tie the sachet closed"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "iron-spine-candle-ritual",
+      "name": "IRON SPINE CANDLE RITUAL",
+      "category": "spell",
+      "subcategory": "Confidence / Empowerment",
+      "description": "You already know what you need to say. The Iron Spine Ritual just makes sure your voice doesn't shake when you say it. Light it before the meeting, the call, the conversation you've rehearsed a hundred times — and walk in standing taller.",
+      "ingredients": ["Carnelian chip (courage, confidence)", "Dried rosemary (clarity, strength)", "Cinnamon (boldness, quick action)", "Tiger's eye chip", "A small steel pin or nail (\"iron spine\")", "Orange or red candle (sold separately or as a kit add-on)"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "last-word-oil",
+      "name": "LAST WORD OIL",
+      "category": "spell",
+      "subcategory": "Confidence / Empowerment",
+      "description": "A drop on the wrist, a drop at the throat. Last Word Oil isn't for picking the fight — it's for finishing it, calmly, on your terms.",
+      "ingredients": ["Rosemary", "Carnelian chip (charged in the oil)", "Clove (for cutting through hesitation)", "Bay leaf flake", "Citrine chip (confidence, clarity)"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "self-binding-sachet",
+      "name": "SELF-BINDING SACHET",
+      "category": "spell",
+      "subcategory": "Confidence / Empowerment",
+      "description": "Not every battle is with someone else. The Self-Binding Sachet quiets the voice in your head that talks you out of things you already decided to do.",
+      "ingredients": ["Lavender (calm, clarity)", "Bay leaf (confidence, written affirmation folded inside)", "Black thread (binding — wrapped around the sachet itself)", "Amethyst chip (calm certainty)", "Chamomile (settles anxious energy)"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "comeuppance-poppet-kit",
+      "name": "COMEUPPANCE POPPET KIT",
+      "category": "spell",
+      "subcategory": "Justice / Ritual",
+      "description": "Karma's a little slow sometimes. The Comeuppance Kit gives it a nudge. A hand-stitched poppet, pins, and a ritual that says what you've been thinking: what goes around, comes around — for ritual & entertainment purposes.",
+      "ingredients": ["Small fabric poppet (doll)", "Pins (for symbolic binding/return-to-sender work)", "Black salt", "Dried thorns or bramble", "Vinegar-soaked cotton (souring/blocking)", "Card insert: \"For ritual and entertainment purposes. This kit channels symbolic justice — what is sent returns to its source.\""],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "mirror-curse-jar",
+      "name": "MIRROR CURSE JAR",
+      "category": "spell",
+      "subcategory": "Justice / Ritual",
+      "description": "Whatever they sent your way doesn't have to land. The Mirror Curse Jar reflects it straight back — for ritual & entertainment purposes — so you can stop carrying what was never yours.",
+      "ingredients": ["Small mirror shard or mirror chip (face-out)", "Black salt", "Needles (symbolic deflection)", "Dried chili flake (heat, return-to-sender)", "Onyx chip"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "petty-revenge-candle",
+      "name": "PETTY REVENGE CANDLE",
+      "category": "spell",
+      "subcategory": "Justice / Ritual",
+      "description": "For the small stuff. The Petty Revenge Candle is for the group chat drama, the bad coworker, the friend who never pays you back — light it, laugh about it, let it go. For ritual & entertainment purposes only.",
+      "ingredients": ["Black pepper (irritation, return-to-sender)", "Dried chili", "Clove", "A tiny scrap of paper with their name, folded and tucked under the wax (sold as a ritual prompt, not instructions for harm)"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "root-chakra-jar",
+      "name": "ROOT CHAKRA CLEANSE JAR",
+      "category": "spell",
+      "subcategory": "Chakra / Grounding",
+      "description": "Feeling untethered? The Root Chakra Jar brings you back into your body — grounded, steady, planted.",
+      "ingredients": ["Red jasper", "Dried patchouli", "Cinnamon stick (broken)", "Black peppercorns", "Sea salt"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "sacral-chakra-jar",
+      "name": "SACRAL CHAKRA CLEANSE JAR",
+      "category": "spell",
+      "subcategory": "Chakra / Creativity",
+      "description": "For the creative block, the emotional numbness, the \"I don't even know what I want\" feeling. The Sacral Jar stirs it all back to life.",
+      "ingredients": ["Carnelian chip", "Dried orange peel", "Calendula petals", "Cinnamon"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "solar-plexus-chakra-jar",
+      "name": "SOLAR PLEXUS CHAKRA CLEANSE JAR",
+      "category": "spell",
+      "subcategory": "Chakra / Willpower",
+      "description": "Your gut feeling has been right more often than you've given it credit for. The Solar Plexus Jar reconnects you to it.",
+      "ingredients": ["Citrine chip", "Dried chamomile", "Ginger root (dried)", "Yellow calendula petals"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "heart-chakra-jar",
+      "name": "HEART CHAKRA CLEANSE JAR",
+      "category": "spell",
+      "subcategory": "Chakra / Love",
+      "description": "Whether it's love for someone else or love you've stopped giving yourself — the Heart Chakra Jar reopens what's been closed off.",
+      "ingredients": ["Rose quartz chip", "Dried rose petals", "Green aventurine chip", "Lavender"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "throat-chakra-jar",
+      "name": "THROAT CHAKRA CLEANSE JAR",
+      "category": "spell",
+      "subcategory": "Chakra / Voice",
+      "description": "For everything you've swallowed instead of said. The Throat Chakra Jar clears the block between what you feel and what comes out of your mouth.",
+      "ingredients": ["Sodalite or lapis chip", "Dried blue cornflower petals", "Eucalyptus leaf", "Clove"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "third-eye-chakra-jar",
+      "name": "THIRD EYE CHAKRA CLEANSE JAR",
+      "category": "spell",
+      "subcategory": "Chakra / Intuition",
+      "description": "For the gut feelings you've been ignoring and the patterns you keep almost seeing. The Third Eye Jar sharpens the signal.",
+      "ingredients": ["Amethyst chip", "Dried mugwort", "Star anise (whole)", "Lavender"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "crown-chakra-jar",
+      "name": "CROWN CHAKRA CLEANSE JAR",
+      "category": "spell",
+      "subcategory": "Chakra / Spirit",
+      "description": "For the moments you feel disconnected from everything bigger than the to-do list. The Crown Jar reopens the line.",
+      "ingredients": ["Clear quartz chip", "Dried white sage flake", "Frankincense resin (small piece)", "Jasmine flower"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "black-salt",
+      "name": "BLACK SALT",
+      "category": "apothecary",
+      "subcategory": "Apothecary Staple",
+      "description": "Every banishing jar on this shelf starts here. Black Salt is the line you draw when \"please stop\" didn't work — sprinkle it on a threshold, ring a windowsill, or seal it into your own jar. Sold by the jar, restocked when you run out (you will run out).",
+      "ingredients": ["Fine sea salt", "Activated charcoal or burnt herb ash (traditional blackening agent)", "Pinch of ground clove (protective)"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "white-sage",
+      "name": "WHITE SAGE",
+      "category": "apothecary",
+      "subcategory": "Apothecary Staple",
+      "description": "Clear the air — literally. White Sage is for the \"something feels off in here\" moments: after the breakup, after the argument, after the houseguest leaves. Light it, let the smoke move through the room, and start the next chapter without yesterday's static still hanging around.",
+      "ingredients": ["Dried white sage bundle (smudge stick) or loose leaf", "Optional: bound with cotton string, occasionally accented with lavender"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "loose-incense-blends",
+      "name": "LOOSE INCENSE BLENDS",
+      "category": "apothecary",
+      "subcategory": "Apothecary Staple",
+      "description": "One pinch on a charcoal disc, and the room changes. Loose Incense Blends are matched to every jar in the shop — burn the one that matches your intention, or mix your own. No two batches smell quite the same, and that's the point.",
+      "ingredients": ["Banish Blend: rue, clove, dried bay, black peppercorn", "Confidence Blend: rosemary, cinnamon, orange peel", "Justice/Return Blend: black pepper, dried chili, clove", "Third Eye Blend: mugwort, star anise, lavender", "Heart Blend: rose petal, lavender, green tea leaf"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "breakup-ritual-box",
+      "name": "BREAKUP RITUAL BOX",
+      "category": "apothecary",
+      "subcategory": "Bundled Kit",
+      "description": "You don't need closure from them. You can give it to yourself. The Breakup Ritual Box has everything for one clean night: cut the cord, salt the door, light the candle, and wake up tomorrow with your name back in your own mouth.",
+      "ingredients": ["Vanish Hex Jar", "No Contact Sachet", "Self-Binding Sachet", "Black Salt (travel-size jar)", "One taper candle (black or white)", "Printed ritual card with step-by-step instructions"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "ritual-candles",
+      "name": "RITUAL CANDLES",
+      "category": "apothecary",
+      "subcategory": "Bulk / Bundle Component",
+      "description": "Unscented, hand-poured, and exactly what every jar in this shop is waiting to be lit next to. Pick the color that matches your intention — or just grab black, it goes with everything.",
+      "ingredients": ["Black — banishing, protection, cord-cutting", "White — clearing, all-purpose, chakra work", "Red/Orange — confidence, courage, action", "Pink — self-love, heart work"],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    },
+    {
+      "id": "witch-tee",
+      "name": "\"WITCH\" TEE",
+      "category": "apparel",
+      "subcategory": "Apparel",
+      "description": "Streamer culture meets the occult. Original witch-streaming-themed wordmark — its own typography and color identity that reads as witchy + internet culture. Wear your craft.",
+      "ingredients": [],
+      "price": 33,
+      "stripeLink": "",
+      "image": ""
+    }
+  ],
+  "assets": {
+    "logo": "",
+    "favicon": "",
+    "wordmark": "",
+    "socialShare": ""
+  }
+}
