@@ -4,19 +4,29 @@ Module 1: **Storefront Foundation + Admin Dashboard**
 
 ## Stack
 - **Next.js 15** (App Router, JavaScript)
-- **MongoDB** (adapted from Supabase spec for this environment)
+- **Supabase** (PostgreSQL via `@supabase/supabase-js`)
 - **Tailwind CSS + shadcn/ui**
 - **Framer Motion** animations
 - **Stripe** (placeholder button for Module 2)
 
-## Environment Variables (`.env`)
+## Supabase Setup
+
+1. Create a project at [app.supabase.com](https://app.supabase.com).
+2. In **SQL Editor**, paste and run the contents of `supabase-schema.sql` to create all tables.
+3. In **Project Settings → API**, copy your **Project URL** and **service_role** secret key.
+4. Add the environment variables below to Vercel (or your `.env.local`).
+
+The app seeds 4 demo products, 3 categories, hero, and branding data on the first API request automatically.
+
+## Environment Variables (`.env.local` / Vercel)
 ```
-MONGO_URL=mongodb://localhost:27017
-DB_NAME=hexpose
-NEXT_PUBLIC_BASE_URL=<your external URL>
-CORS_ORIGINS=*
+NEXT_PUBLIC_SUPABASE_URL=https://<your-project-ref>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<your-service-role-secret>
 ADMIN_PASSWORD=hexpose2025
+CORS_ORIGINS=*
 ```
+
+> **Never** expose `SUPABASE_SERVICE_ROLE_KEY` on the client side. It is only read in Next.js API routes (server-side).
 
 ## Admin Dashboard
 - URL: `/admin/login`
@@ -30,15 +40,15 @@ Sections: Overview · Products · Categories · Hero Builder · Branding · Orde
 - `/product/[slug]` — gallery, spell metadata panel, related products, add to cart
 - `/about`, `/contact`, `/faq`, `/cart`
 
-## Data Model (MongoDB collections)
-- `branding_settings` — single doc
-- `hero_sections` — single doc
+## Data Model (Supabase / PostgreSQL tables)
+- `branding_settings` — single row
+- `hero_sections` — single row
 - `categories`
-- `products` — embeds `spell` metadata sub-doc
+- `products` — `spell` metadata stored as a `jsonb` column
 - `settings` — seed marker
 - `newsletter`, `contact_messages`
 
-Seeded on first API request with 4 initial products.
+Seeded automatically on first API request with 4 demo products.
 
 ## API
 All API routes are under `/api/*` via a Next.js catch-all route.

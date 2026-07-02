@@ -1,47 +1,13 @@
-import { MongoClient } from 'mongodb'
 import { v4 as uuidv4 } from 'uuid'
 import { NextResponse } from 'next/server'
+import { getSupabaseAdmin } from '@/lib/supabase'
 import { seedCategories, seedProducts, seedHero, seedBranding } from '@/lib/seed-data'
-
-let client, db, lastConnectError = null
-async function connectToMongo() {
-  if (!process.env.MONGO_URL) {
-    const err = new Error('MONGO_URL is not configured. Set it in your Vercel project environment variables.')
-    err.code = 'NO_MONGO_URL'
-    throw err
-  }
-  if (!client) {
-    try {
-      client = new MongoClient(process.env.MONGO_URL, {
-        serverSelectionTimeoutMS: 8000,
-        connectTimeoutMS: 8000,
-      })
-      await client.connect()
-      db = client.db(process.env.DB_NAME || 'hexpose')
-      // Verify actual reachability (not just successful URL parse)
-      await db.command({ ping: 1 })
-      lastConnectError = null
-    } catch (e) {
-      lastConnectError = { name: e?.name, message: String(e?.message || e), code: e?.code }
-      // Reset so the next request retries a fresh connection instead of caching a broken client
-      try { await client?.close?.() } catch {}
-      client = null
-      db = null
-      throw e
-    }
-  }
-  return db
-}
 
 function isDbUnavailable(error) {
   if (!error) return false
-  if (error.code === 'NO_MONGO_URL') return true
-  const name = error.name || ''
+  if (error.code === 'NO_SUPABASE_CONFIG') return true
   const msg = String(error.message || '')
-  return (
-    /Mongo(Network|ServerSelection|Server|Parse|Client|Timeout)?Error/i.test(name) ||
-    /ECONNREFUSED|EAI_AGAIN|ETIMEDOUT|ENOTFOUND|failed to connect|querySrv|Authentication failed|Server selection|bad auth|not authorized/i.test(msg)
-  )
+  return /fetch failed|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|network|Failed to fetch/i.test(msg)
 }
 
 function cors(response) {
@@ -54,18 +20,21 @@ function cors(response) {
 
 export async function OPTIONS() { return cors(new NextResponse(null, { status: 200 })) }
 
-const clean = (doc) => { if (!doc) return doc; const { _id, ...rest } = doc; return rest }
-const cleanMany = (arr) => arr.map(clean)
+// Throws on Supabase query errors so the outer try/catch handles them uniformly
+function sbCheck({ data, error }) {
+  if (error) throw error
+  return data
+}
 
-async function ensureSeeded(db) {
-  const seeded = await db.collection('settings').findOne({ id: 'seed_marker' })
+async function ensureSeeded(supabase) {
+  const { data: seeded } = await supabase.from('settings').select('id').eq('id', 'seed_marker').maybeSingle()
   if (seeded) return
-  const cats = seedCategories()
-  await db.collection('categories').insertMany(cats)
-  await db.collection('products').insertMany(seedProducts())
-  await db.collection('hero_sections').insertOne(seedHero())
-  await db.collection('branding_settings').insertOne(seedBranding())
-  await db.collection('settings').insertOne({ id: 'seed_marker', seeded_at: new Date() })
+
+  await supabase.from('categories').insert(seedCategories())
+  await supabase.from('products').insert(seedProducts())
+  await supabase.from('hero_sections').insert(seedHero())
+  await supabase.from('branding_settings').insert(seedBranding())
+  await supabase.from('settings').insert({ id: 'seed_marker', seeded_at: new Date().toISOString() })
 }
 
 function isAdmin(request) {
@@ -79,46 +48,48 @@ async function handleRoute(request, { params }) {
   const route = `/${path.join('/')}`
   const method = request.method
 
-  // Routes that MUST work without a DB connection (health/diagnostic)
+  // Routes that work without a DB connection
   if (route === '/root' && method === 'GET') return cors(NextResponse.json({ message: 'Hexpose API', ok: true }))
+
   if (route === '/health' && method === 'GET') {
-    const hasUrl = !!process.env.MONGO_URL
-    const scheme = hasUrl ? (process.env.MONGO_URL.startsWith('mongodb+srv://') ? 'srv' : 'standard') : 'none'
-    if (!hasUrl) {
+    const hasUrl = !!process.env.NEXT_PUBLIC_SUPABASE_URL
+    const hasKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!hasUrl || !hasKey) {
       return cors(NextResponse.json({
-        ok: false, mongo_url_configured: false, mongo_url_scheme: 'none',
-        db_reachable: false, hint: 'MONGO_URL env var is not set in Vercel.',
+        ok: false,
+        supabase_url_configured: hasUrl,
+        supabase_key_configured: hasKey,
+        hint: 'Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in your Vercel project environment variables.',
         admin_password_set: !!process.env.ADMIN_PASSWORD,
       }))
     }
     try {
-      const _db = await connectToMongo()
-      await _db.command({ ping: 1 })
-      const productCount = await _db.collection('products').countDocuments({})
+      const supabase = getSupabaseAdmin()
+      const { count, error } = await supabase.from('products').select('*', { count: 'exact', head: true })
+      if (error) throw error
       return cors(NextResponse.json({
-        ok: true, mongo_url_configured: true, mongo_url_scheme: scheme,
-        db_name: process.env.DB_NAME || 'hexpose', db_reachable: true,
-        product_count: productCount, admin_password_set: !!process.env.ADMIN_PASSWORD,
+        ok: true,
+        supabase_url_configured: true,
+        db_reachable: true,
+        product_count: count ?? 0,
+        admin_password_set: !!process.env.ADMIN_PASSWORD,
       }))
     } catch (e) {
       return cors(NextResponse.json({
-        ok: false, mongo_url_configured: true, mongo_url_scheme: scheme,
-        db_name: process.env.DB_NAME || 'hexpose', db_reachable: false,
+        ok: false,
+        supabase_url_configured: true,
+        db_reachable: false,
         error_name: e?.name || 'Error',
         error_message: String(e?.message || e).slice(0, 500),
         admin_password_set: !!process.env.ADMIN_PASSWORD,
-        hint: /Authentication failed|bad auth/i.test(String(e?.message || '')) ? 'Bad username or password in MONGO_URL. Check the DB user in Atlas Database Access.' :
-              /ETIMEDOUT|ENOTFOUND|Server selection|querySrv|EAI_AGAIN/i.test(String(e?.message || '')) ? 'Cannot reach cluster. Atlas Network Access must allow 0.0.0.0/0. Or the cluster hostname in your connection string is wrong.' :
-              /not authorized/i.test(String(e?.message || '')) ? 'DB user lacks permissions. Grant Atlas admin or readWriteAnyDatabase.' :
-              /IP.+whitelist|IP.+not.+allowed/i.test(String(e?.message || '')) ? 'Your Atlas Network Access does not include Vercel IPs. Add 0.0.0.0/0.' :
-              'Unknown DB error. Copy error_message and google it, or paste it here.',
+        hint: 'Check your NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY values.',
       }))
     }
   }
 
   try {
-    const db = await connectToMongo()
-    await ensureSeeded(db)
+    const supabase = getSupabaseAdmin()
+    await ensureSeeded(supabase)
 
     // ============ ADMIN AUTH ============
     if (route === '/admin/login' && method === 'POST') {
@@ -150,19 +121,21 @@ async function handleRoute(request, { params }) {
       const featured = url.searchParams.get('featured')
       const q = url.searchParams.get('q')
       const includeInactive = url.searchParams.get('all') === '1' && isAdmin(request)
-      const filter = {}
-      if (!includeInactive) filter.active = true
-      if (category && category !== 'all') filter.category = category
-      if (featured === '1') filter.featured = true
-      if (q) filter.name = { $regex: q, $options: 'i' }
-      const list = await db.collection('products').find(filter).sort({ created_at: -1 }).toArray()
-      return cors(NextResponse.json(cleanMany(list)))
+
+      let query = supabase.from('products').select('*').order('created_at', { ascending: false })
+      if (!includeInactive) query = query.eq('active', true)
+      if (category && category !== 'all') query = query.eq('category', category)
+      if (featured === '1') query = query.eq('featured', true)
+      if (q) query = query.ilike('name', `%${q}%`)
+
+      const list = sbCheck(await query)
+      return cors(NextResponse.json(list || []))
     }
 
     if (route === '/products' && method === 'POST') {
       const auth = requireAdmin(); if (auth) return auth
       const body = await request.json()
-      const now = new Date()
+      const now = new Date().toISOString()
       const doc = {
         id: uuidv4(),
         name: body.name || 'Untitled Product',
@@ -184,106 +157,110 @@ async function handleRoute(request, { params }) {
         seo_title: body.seo_title || '',
         seo_description: body.seo_description || '',
         spell: body.spell || null,
-        created_at: now, updated_at: now,
+        created_at: now,
+        updated_at: now,
       }
-      await db.collection('products').insertOne(doc)
-      return cors(NextResponse.json(clean(doc)))
+      const inserted = sbCheck(await supabase.from('products').insert(doc).select().single())
+      return cors(NextResponse.json(inserted))
     }
 
     // /products/slug/:slug
     if (path[0] === 'products' && path[1] === 'slug' && path[2] && method === 'GET') {
-      const p = await db.collection('products').findOne({ slug: path[2] })
+      const p = sbCheck(await supabase.from('products').select('*').eq('slug', path[2]).maybeSingle())
       if (!p) return cors(NextResponse.json({ error: 'not found' }, { status: 404 }))
-      return cors(NextResponse.json(clean(p)))
+      return cors(NextResponse.json(p))
     }
 
     // /products/:id
     if (path[0] === 'products' && path[1] && !['slug'].includes(path[1])) {
       const id = path[1]
       if (method === 'GET') {
-        const p = await db.collection('products').findOne({ id })
+        const p = sbCheck(await supabase.from('products').select('*').eq('id', id).maybeSingle())
         if (!p) return cors(NextResponse.json({ error: 'not found' }, { status: 404 }))
-        return cors(NextResponse.json(clean(p)))
+        return cors(NextResponse.json(p))
       }
       if (method === 'PUT') {
         const auth = requireAdmin(); if (auth) return auth
         const body = await request.json()
-        const update = { ...body, updated_at: new Date() }
-        delete update._id; delete update.id
-        await db.collection('products').updateOne({ id }, { $set: update })
-        const p = await db.collection('products').findOne({ id })
-        return cors(NextResponse.json(clean(p)))
+        const { id: _id, ...rest } = body
+        const update = { ...rest, updated_at: new Date().toISOString() }
+        const p = sbCheck(await supabase.from('products').update(update).eq('id', id).select().single())
+        return cors(NextResponse.json(p))
       }
       if (method === 'DELETE') {
         const auth = requireAdmin(); if (auth) return auth
-        await db.collection('products').deleteOne({ id })
+        sbCheck(await supabase.from('products').delete().eq('id', id))
         return cors(NextResponse.json({ ok: true }))
       }
     }
 
     // ============ CATEGORIES ============
     if (route === '/categories' && method === 'GET') {
-      const list = await db.collection('categories').find({}).toArray()
-      return cors(NextResponse.json(cleanMany(list)))
+      const list = sbCheck(await supabase.from('categories').select('*').order('name'))
+      return cors(NextResponse.json(list || []))
     }
     if (route === '/categories' && method === 'POST') {
       const auth = requireAdmin(); if (auth) return auth
       const body = await request.json()
-      const doc = { id: uuidv4(), name: body.name, slug: body.slug || body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), description: body.description || '', created_at: new Date() }
-      await db.collection('categories').insertOne(doc)
-      return cors(NextResponse.json(clean(doc)))
+      const doc = {
+        id: uuidv4(),
+        name: body.name,
+        slug: body.slug || body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        description: body.description || '',
+        created_at: new Date().toISOString(),
+      }
+      const inserted = sbCheck(await supabase.from('categories').insert(doc).select().single())
+      return cors(NextResponse.json(inserted))
     }
     if (path[0] === 'categories' && path[1] && method === 'DELETE') {
       const auth = requireAdmin(); if (auth) return auth
-      await db.collection('categories').deleteOne({ id: path[1] })
+      sbCheck(await supabase.from('categories').delete().eq('id', path[1]))
       return cors(NextResponse.json({ ok: true }))
     }
 
     // ============ HERO ============
     if (route === '/hero' && method === 'GET') {
-      const h = await db.collection('hero_sections').findOne({})
-      return cors(NextResponse.json(clean(h)))
+      const h = sbCheck(await supabase.from('hero_sections').select('*').maybeSingle())
+      return cors(NextResponse.json(h))
     }
     if (route === '/hero' && method === 'PUT') {
       const auth = requireAdmin(); if (auth) return auth
       const body = await request.json()
-      const existing = await db.collection('hero_sections').findOne({})
-      const update = { ...body, updated_at: new Date() }
-      delete update._id
+      const update = { ...body, updated_at: new Date().toISOString() }
+      const existing = sbCheck(await supabase.from('hero_sections').select('id').maybeSingle())
+      let h
       if (existing) {
-        await db.collection('hero_sections').updateOne({ id: existing.id }, { $set: update })
+        h = sbCheck(await supabase.from('hero_sections').update(update).eq('id', existing.id).select().single())
       } else {
-        await db.collection('hero_sections').insertOne({ id: uuidv4(), ...update })
+        h = sbCheck(await supabase.from('hero_sections').insert({ id: uuidv4(), ...update }).select().single())
       }
-      const h = await db.collection('hero_sections').findOne({})
-      return cors(NextResponse.json(clean(h)))
+      return cors(NextResponse.json(h))
     }
 
     // ============ BRANDING ============
     if (route === '/branding' && method === 'GET') {
-      const b = await db.collection('branding_settings').findOne({})
-      return cors(NextResponse.json(clean(b)))
+      const b = sbCheck(await supabase.from('branding_settings').select('*').maybeSingle())
+      return cors(NextResponse.json(b))
     }
     if (route === '/branding' && method === 'PUT') {
       const auth = requireAdmin(); if (auth) return auth
       const body = await request.json()
-      const update = { ...body, updated_at: new Date() }
-      delete update._id
-      const existing = await db.collection('branding_settings').findOne({})
+      const update = { ...body, updated_at: new Date().toISOString() }
+      const existing = sbCheck(await supabase.from('branding_settings').select('id').maybeSingle())
+      let b
       if (existing) {
-        await db.collection('branding_settings').updateOne({}, { $set: update })
+        b = sbCheck(await supabase.from('branding_settings').update(update).eq('id', existing.id).select().single())
       } else {
-        await db.collection('branding_settings').insertOne({ id: 'default', ...update })
+        b = sbCheck(await supabase.from('branding_settings').insert({ id: 'default', ...update }).select().single())
       }
-      const b = await db.collection('branding_settings').findOne({})
-      return cors(NextResponse.json(clean(b)))
+      return cors(NextResponse.json(b))
     }
 
     // ============ NEWSLETTER ============
     if (route === '/newsletter' && method === 'POST') {
       const body = await request.json()
       if (!body.email) return cors(NextResponse.json({ error: 'email required' }, { status: 400 }))
-      await db.collection('newsletter').insertOne({ id: uuidv4(), email: body.email, created_at: new Date() })
+      sbCheck(await supabase.from('newsletter').insert({ id: uuidv4(), email: body.email, created_at: new Date().toISOString() }))
       return cors(NextResponse.json({ ok: true }))
     }
 
@@ -291,21 +268,37 @@ async function handleRoute(request, { params }) {
     if (route === '/contact' && method === 'POST') {
       const body = await request.json()
       if (!body.email || !body.message) return cors(NextResponse.json({ error: 'email and message required' }, { status: 400 }))
-      await db.collection('contact_messages').insertOne({ id: uuidv4(), name: body.name || '', email: body.email, subject: body.subject || '', message: body.message, created_at: new Date() })
+      sbCheck(await supabase.from('contact_messages').insert({
+        id: uuidv4(), name: body.name || '', email: body.email,
+        subject: body.subject || '', message: body.message,
+        created_at: new Date().toISOString(),
+      }))
       return cors(NextResponse.json({ ok: true }))
     }
 
     // ============ OVERVIEW STATS ============
     if (route === '/admin/overview' && method === 'GET') {
       const auth = requireAdmin(); if (auth) return auth
-      const [products, categories, newsletter, contact] = await Promise.all([
-        db.collection('products').countDocuments({}),
-        db.collection('categories').countDocuments({}),
-        db.collection('newsletter').countDocuments({}),
-        db.collection('contact_messages').countDocuments({}),
+      const [
+        { count: products },
+        { count: activeProducts },
+        { count: categories },
+        { count: newsletter },
+        { count: contact },
+      ] = await Promise.all([
+        supabase.from('products').select('*', { count: 'exact', head: true }),
+        supabase.from('products').select('*', { count: 'exact', head: true }).eq('active', true),
+        supabase.from('categories').select('*', { count: 'exact', head: true }),
+        supabase.from('newsletter').select('*', { count: 'exact', head: true }),
+        supabase.from('contact_messages').select('*', { count: 'exact', head: true }),
       ])
-      const active = await db.collection('products').countDocuments({ active: true })
-      return cors(NextResponse.json({ products, active_products: active, categories, newsletter, contact }))
+      return cors(NextResponse.json({
+        products: products ?? 0,
+        active_products: activeProducts ?? 0,
+        categories: categories ?? 0,
+        newsletter: newsletter ?? 0,
+        contact: contact ?? 0,
+      }))
     }
 
     return cors(NextResponse.json({ error: `Route ${route} not found` }, { status: 404 }))
@@ -313,7 +306,10 @@ async function handleRoute(request, { params }) {
     console.error('API Error:', error?.name, error?.message)
     if (isDbUnavailable(error)) {
       const safe = (route === '/products' || route === '/categories') ? [] : {}
-      return cors(NextResponse.json(safe, { status: 200, headers: { 'x-hexpose-db': 'unavailable', 'x-hexpose-db-error': String(error?.name || 'unknown') } }))
+      return cors(NextResponse.json(safe, {
+        status: 200,
+        headers: { 'x-hexpose-db': 'unavailable', 'x-hexpose-db-error': String(error?.name || 'unknown') },
+      }))
     }
     return cors(NextResponse.json({ error: 'Internal server error', detail: String(error?.message || error) }, { status: 500 }))
   }
